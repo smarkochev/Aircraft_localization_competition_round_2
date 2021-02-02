@@ -39,10 +39,11 @@ All data files should be in ./data folder. Only three files were used in this so
 
 In round 1 of the competition many participants used effective signal velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of signal velocity. 
 
-Using altitude dependence of refractive index $n(h)$ from [1], velocity as a function of altitude can be written as follows: 
+Using altitude dependence of refractive index <img src="https://render.githubusercontent.com/render/math?math=n(h)" align=middle> from [1], velocity as a function of altitude can be written as follows: 
 
-$$v(h) = \frac{c}{n(h)} = \frac{c}{1 + A_0\cdot e^{-B\cdot h}}$$
-, where $c$ is the speed of light, $h$ - altitude, $n(h)$ - refractive index, $A_0$ and $B$ - some constants.
+<p align="center"><img src="https://render.githubusercontent.com/render/math?math=v(h)=\frac{c}{n(h)}=\frac{c}{1 %2B A_0\cdot e^{-B\cdot h}}" align=middle height=36pt></p>
+
+, where <img src="https://render.githubusercontent.com/render/math?math=c" align=middle> is the speed of light, <img src="https://render.githubusercontent.com/render/math?math=h" align=middle> - altitude, <img src="https://render.githubusercontent.com/render/math?math=n(h)" align=middle> - refractive index, <img src="https://render.githubusercontent.com/render/math?math=A_0" align=middle> and <img src="https://render.githubusercontent.com/render/math?math=B" align=middle> - some constants.
 
 Instead of integrating velocity each time, let's consider some constant effective velocity: 
 $$\hat{v} = const = \frac{L}{\int{dt(h)}}$$
