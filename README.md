@@ -35,9 +35,9 @@ All data files should be in ./data folder. Only three files were used in this so
 
 
 # 2. Theory
-## 2.1 Signal velocity model
+## 2.1 Wave velocity model
 
-In round 1 of the competition many participants used effective signal velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of signal velocity. 
+In round 1 of the competition many participants used effective wave velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of wave velocity. 
 
 Using altitude dependence of refractive index <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> from [1], velocity as a function of altitude can be written as follows: 
 
@@ -45,17 +45,17 @@ Using altitude dependence of refractive index <img src="svgs/0b700b6ef9752b739fe
 
 , where <img src="svgs/3e18a4a28fdee1744e5e3f79d13b9ff6.svg?invert_in_darkmode" align=middle width=7.113876000000004pt height=14.155350000000013pt/> is the speed of light, <img src="svgs/2ad9d098b937e46f9f58968551adac57.svg?invert_in_darkmode" align=middle width=9.471165000000003pt height=22.831379999999992pt/> - altitude, <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> - refractive index, <img src="svgs/2e5cace905a61fe431f7b898becb0be1.svg?invert_in_darkmode" align=middle width=18.881445000000006pt height=22.46574pt/> and <img src="svgs/61e84f854bc6258d4108d08d4c4a0852.svg?invert_in_darkmode" align=middle width=13.293555000000003pt height=22.46574pt/> - some constants.
 
-Instead of integrating velocity each time, let's consider some constant effective velocity: 
+Instead of integrating velocity each time, let's consider some effective velocity: 
 <p align="center"><img src="svgs/324d302c449c8b7a25e54fbe21a471f8.svg?invert_in_darkmode" align=middle width=143.40314999999998pt height=38.810145pt/></p>
 
 <p align="center"><img src="svgs/7668dde8336ca86314c642afcfb541ab.svg?invert_in_darkmode" align=middle width=752.4626999999999pt height=42.92277pt/></p>
 
-, where <img src="svgs/ddcb483302ed36a59286424aa5e0be17.svg?invert_in_darkmode" align=middle width=11.187330000000003pt height=22.46574pt/> - signal path, <img src="svgs/5a95dbebd5e79e850a576db54f501ab8.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> and <img src="svgs/0f7cea0b89929faf20eda59174bc247f.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> - initial and final altitudes of the signal path.
+, where <img src="svgs/ddcb483302ed36a59286424aa5e0be17.svg?invert_in_darkmode" align=middle width=11.187330000000003pt height=22.46574pt/> - wave path, <img src="svgs/5a95dbebd5e79e850a576db54f501ab8.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> and <img src="svgs/0f7cea0b89929faf20eda59174bc247f.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> - initial and final altitudes of the wave path.
 
-Finally, after inserting <img src="svgs/09167708b6619ba3b4d57545fe6e5937.svg?invert_in_darkmode" align=middle width=73.57482pt height=29.461410000000004pt/>, effective signal velocity will be:
+Finally, after inserting <img src="svgs/09167708b6619ba3b4d57545fe6e5937.svg?invert_in_darkmode" align=middle width=73.57482pt height=29.461410000000004pt/>, effective wave velocity will be:
 <p align="center"><img src="svgs/cf06bd3cc64a15d142e37f237399e5e1.svg?invert_in_darkmode" align=middle width=319.3311pt height=39.53796pt/></p>
 
-New signal velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
+New wave velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
 [1] R. Purvinskis et al. Multiple Wavelength Free-Space Laser Communications. Proceedings of SPIE - The International Society for Optical Engineering, 2003. 
 
@@ -68,7 +68,7 @@ Stations are synchronized when there is no time drift, so measured time is equal
 If station measurements have a drift, then:
 
 <p align="center"><img src="svgs/2550b51fa5c8c827afe0d44672968a2d.svg?invert_in_darkmode" align=middle width=315.3315pt height=33.629475pt/></p>
-It's worth to notice here that drift is added at the moment of signal detection!
+It's worth to notice here that drift is added at the moment of wave detection!
 
 We have to have some already synchronized stations. Let's consider a synchronized station 1 and a drifted station 2.
 
