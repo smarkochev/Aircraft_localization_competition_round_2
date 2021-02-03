@@ -383,8 +383,6 @@ class TrackCollection():
                         __t1 = t
                     else:
                         __t1 = np.r_[__t1, t]
-                    #__t1 += t[st1_str].values.tolist()
-                    #__t2 += t[st2_str].values.tolist()
                 
         if return_telemetry or return_time:
             track_telemetry = pd.DataFrame()
@@ -395,8 +393,7 @@ class TrackCollection():
             if return_time:
                 for i, s in enumerate(comb):
                     track_telemetry[str(s)] = __t1[:, i]
-                #track_telemetry[st1_str] = __t1
-                #track_telemetry[st2_str] = __t2
+                    
             return (track_stat, track_telemetry)
         else:
             return track_stat
@@ -413,29 +410,32 @@ class TrackCollection():
         return pairs
     
     
-    def get_aircraft_times(self, stations, comb, A0_B=None):
+    def get_aircraft_times(self, stations, comb, A0_B=None, verbose=False, ylim=[-1e3, 1e3]):
         _, tel = self.aggregate(comb, return_telemetry=True, return_time=True)
 
         st1, st2 = comb
         st1_str, st2_str = str(comb[0]), str(comb[1])
-        
-        output = np.zeros([tel.shape[0], 2])
-        
-        p3 = [P3(lat, lon, hgt) for lat, lon, hgt in zip(tel['latitude'], tel['longitude'], tel['geoAltitude'])]
-        
-        if stations.time_correction_available(st1):
-            t1 = stations.correct_time(st1, tel[st1_str].values)
-        else:
-            t1 = tel[st1_str].values
-            
-        if stations.time_correction_available(st2):
-            t2 = stations.correct_time(st2, tel[st2_str].values)
-        else:
-            t2 = tel[st2_str].values
-        
-        output[:, 0] = np.array([t - stations.time_to(st1, p, A0_B) for t, p in zip(t1, p3)])
-        output[:, 1] = np.array([t - stations.time_to(st2, p, A0_B) for t, p in zip(t2, p3)])
 
+        output = np.zeros([tel.shape[0], 2])
+
+        p3 = [P3(lat, lon, hgt) for lat, lon, hgt in zip(tel['latitude'], tel['longitude'], tel['geoAltitude'])]
+
+        t1 = stations.correct_time(st1, tel[st1_str].values)
+        t2 = stations.correct_time(st2, tel[st2_str].values)
+
+        output[:, 0] = np.array([t - stations.time_to(st1, p) for t, p in zip(t1, p3)])
+        output[:, 1] = np.array([t - stations.time_to(st2, p) for t, p in zip(t2, p3)])
+
+        if verbose:
+            print('Approx Median error [m]:', 3e8*np.median(np.fabs(output[:, 0] - output[:, 1])))
+
+            plt.plot(output[:, 0], 1e9*(output[:, 0] - output[:, 1]), '.')
+            plt.title('Delta time between stations', fontsize=16)
+            plt.xlabel('Time, s', fontsize=14)
+            plt.ylabel('Delta time, ns', fontsize=14)
+            plt.ylim(ylim)
+            plt.grid()
+        
         return output
     
     
