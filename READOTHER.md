@@ -86,7 +86,7 @@ $$t^{meas} = (A+1)\cdot(t^{aircraft} + \frac{L}{\hat{v}}) + B + spline(t^{aircra
 
 It would be very difficult to solve the last nonlinear equation directly. Instead, we will use the fact that spline eliminates the slow component of time drift and therefore in the first approximation we can simply ignore it:
 
-$$t^{aircraft} = \frac{t^{meas} - B}{A+1}$$
+$$t^{aircraft} + \frac{L}{\hat{v}} = \frac{t^{meas} - B}{A+1}$$
 
 Finally, we can synchronize station measurements by applying the following trasformation to measured time values:
 $$t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1}$$
