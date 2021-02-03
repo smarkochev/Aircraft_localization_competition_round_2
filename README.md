@@ -59,9 +59,9 @@ New wave velocity model shows 0.1m less average residual error in solving multil
 
 [1] R. Purvinskis et al. Multiple Wavelength Free-Space Laser Communications. Proceedings of SPIE - The International Society for Optical Engineering, 2003. 
 
-## 2.2 Stations time drift
+## 2.2 Stations clock drift
 
-Stations are synchronized when there is no time drift, so measured time is equal to aircraft time + time-of-flight:
+Stations are synchronized when there is no drift, so measured time is equal to aircraft time + time-of-flight:
 
 <p align="center"><img src="svgs/43580024997948d3e68c2ff8a486aa37.svg?invert_in_darkmode" align=middle width=150.28794pt height=33.629475pt/></p>
 
@@ -78,15 +78,15 @@ Considering <img src="svgs/31d18a2424dd7476a46822fd19f48a1b.svg?invert_in_darkmo
 
 <p align="center"><img src="svgs/d308ef49eaec380cebfc9bf6d2da5414.svg?invert_in_darkmode" align=middle width=279.92085pt height=33.629475pt/></p>
 
-### Time drift approximation
-Drift was approximated by a sum of a linear function and a spline:
+### Clock drift approximation
+Drift was approximated by a sum of a linear and a spline functions:
 <p align="center"><img src="svgs/40d75a8025d335645062e323b7d5e5ea.svg?invert_in_darkmode" align=middle width=225.20685pt height=16.438356pt/></p>
 
 So,
 <p align="center"><img src="svgs/e1dc6ec661976b0794dd68ee39114674.svg?invert_in_darkmode" align=middle width=504.68385pt height=33.629475pt/></p>
 <p align="center"><img src="svgs/0a8b9ea411938f2f635b8208b0cdaafb.svg?invert_in_darkmode" align=middle width=433.3411499999999pt height=33.629475pt/></p>
 
-It would be very difficult to solve the last nonlinear equation directly. Instead, we will use the fact that spline eliminates the slow component of time drift and therefore in the first approximation we can simply ignore it:
+It would be very difficult to solve the last nonlinear equation directly. Instead, we will use the fact that spline eliminates the random walk component of clock drift and therefore in the first approximation we can simply ignore it:
 
 <p align="center"><img src="svgs/308212430e2ac77582e93a3aed44a2fa.svg?invert_in_darkmode" align=middle width=152.39399999999998pt height=34.999305pt/></p>
 
