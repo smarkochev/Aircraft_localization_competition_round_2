@@ -632,7 +632,7 @@ class SingleStationSolver():
             
             indent = 1  # [s]
             gaps = []
-            for i in range(0, int(len(ind)/2+1), 2):
+            for i in range(0, len(ind), 2):
                 gaps.append([self.t1_1[ind[i]]-indent, self.t1_1[ind[i+1]]+indent])
 
             if self.t1_1[0] > 25:
@@ -646,7 +646,7 @@ class SingleStationSolver():
             curr_gap = copy.copy(gaps[0])
             N, i = len(gaps), 1
             while i < N:
-                if curr_gap[1] - gaps[i][0] < 50:
+                if gaps[i][0] - curr_gap[1] < 50:
                     curr_gap[1] = gaps[i][1]
                 else:
                     new_gaps += [curr_gap]
