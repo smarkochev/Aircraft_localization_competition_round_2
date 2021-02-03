@@ -10,7 +10,7 @@ from scipy.interpolate import splev
 
 class Stations:
     
-    def __init__(self, stations_list, sensors_path='round2/round2_sensors.csv'):
+    def __init__(self, stations_list, sensors_path='data/round2_sensors.csv'):
         ## Input checks
         if type(stations_list) is not list:
             raise Exception('Stations must be a list')
