@@ -10,6 +10,10 @@ from cython import boundscheck, wraparound
 from cython.parallel import prange
 
 
+cdef:
+    int N_THREADS = 4
+
+
 # WSG84 ellipsoid constants
 cdef:
     double wgs_a = 6378137  # [m]
@@ -96,7 +100,7 @@ def optimize_shifts(double[:] x,
         
         double[:] st_shift = np.array([10**y for y in x])
         
-    for i in prange(N, nogil=True, schedule='guided', num_threads=4):
+    for i in prange(N, nogil=True, schedule='guided', num_threads=N_THREADS):
         j1 = st_1[i]
         j2 = st_2[i]
         
@@ -143,7 +147,7 @@ def optimize_AB_shifts(double[:] x,
         double B = 10**x[1]
         double[:] st_shift = np.array([10**y for y in x[2:]])
         
-    for i in prange(N, nogil=True, schedule='guided', num_threads=4):
+    for i in prange(N, nogil=True, schedule='guided', num_threads=N_THREADS):
         j1 = st_1[i]
         j2 = st_2[i]
         
@@ -199,7 +203,7 @@ def optimize_locations(double[:] x,
         st_loc[3*i+2] = cart[2]
         st_hgt[i] = x[j1+2]
     
-    for i in prange(N, nogil=True, schedule='guided', num_threads=4):
+    for i in prange(N, nogil=True, schedule='guided', num_threads=N_THREADS):
         j1 = st_1[i]
         j2 = st_2[i]
         
@@ -244,7 +248,7 @@ def solve_point(double[:] x,
     
     cart = wgs2cart_c(x[0], x[1], baroAlt)
     
-    for i in prange(N, nogil=True, schedule='guided', num_threads=4):
+    for i in prange(N, nogil=True, schedule='guided', num_threads=N_THREADS):
         j1 = st[i]
         dist1 = sqrt((st_cart[3*j1] - cart[0])**2 + (st_cart[3*j1+1] - cart[1])**2 + (st_cart[3*j1+2] - cart[2])**2)
         t1 = times[i] - dist1 / eff_velocity(st_hgt[j1], baroAlt, A0, B)
