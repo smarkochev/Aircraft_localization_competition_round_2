@@ -12,14 +12,14 @@
 (gt) >> jupyter notebook
 ```
 
-Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `NTHREADS` variable in `optimize.pyx` file.  
+Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `N_THREADS` variable in `optimize.pyx` file.  
 
 #### Data sets
 
 All data files should be in ./data folder. Only three files were used in this solution:
- - round2competition.csv
- - round2sensors.csv
- - round2training1.csv
+ - round2_competition.csv
+ - round2_sensors.csv
+ - round2_training1.csv
 
 
 # /src files description
@@ -42,12 +42,14 @@ In round 1 of the competition many participants used effective signal velocity i
 Using altitude dependence of refractive index <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> from [1], velocity as a function of altitude can be written as follows: 
 
 <p align="center"><img src="svgs/78ba6690fac5dc48d1b3aacfade2f2f3.svg?invert_in_darkmode" align=middle width=213.41924999999998pt height=33.583769999999994pt/></p>
+
 , where <img src="svgs/3e18a4a28fdee1744e5e3f79d13b9ff6.svg?invert_in_darkmode" align=middle width=7.113876000000004pt height=14.155350000000013pt/> is the speed of light, <img src="svgs/2ad9d098b937e46f9f58968551adac57.svg?invert_in_darkmode" align=middle width=9.471165000000003pt height=22.831379999999992pt/> - altitude, <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> - refractive index, <img src="svgs/2e5cace905a61fe431f7b898becb0be1.svg?invert_in_darkmode" align=middle width=18.881445000000006pt height=22.46574pt/> and <img src="svgs/61e84f854bc6258d4108d08d4c4a0852.svg?invert_in_darkmode" align=middle width=13.293555000000003pt height=22.46574pt/> - some constants.
 
 Instead of integrating velocity each time, let's consider some constant effective velocity: 
 <p align="center"><img src="svgs/324d302c449c8b7a25e54fbe21a471f8.svg?invert_in_darkmode" align=middle width=143.40314999999998pt height=38.810145pt/></p>
 
 <p align="center"><img src="svgs/7668dde8336ca86314c642afcfb541ab.svg?invert_in_darkmode" align=middle width=752.4626999999999pt height=42.92277pt/></p>
+
 , where <img src="svgs/ddcb483302ed36a59286424aa5e0be17.svg?invert_in_darkmode" align=middle width=11.187330000000003pt height=22.46574pt/> - signal path, <img src="svgs/5a95dbebd5e79e850a576db54f501ab8.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> and <img src="svgs/0f7cea0b89929faf20eda59174bc247f.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> - initial and final altitudes of the signal path.
 
 Finally, after inserting <img src="svgs/09167708b6619ba3b4d57545fe6e5937.svg?invert_in_darkmode" align=middle width=73.57482pt height=29.461410000000004pt/>, effective signal velocity will be:
