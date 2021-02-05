@@ -12,22 +12,22 @@
 (gt) >> jupyter notebook
 ```
 
-Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `NTHREADS` variable in `optimize.pyx` file.  
+Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `N_THREADS` variable in `optimize.pyx` file.  
 
 #### Data sets
 
 All data files should be in ./data folder. Only three files were used in this solution:
- - round2competition.csv
- - round2sensors.csv
- - round2training1.csv
+ - round2_competition.csv
+ - round2_sensors.csv
+ - round2_training1.csv
 
 
 # /src files description
 
  | Filename     |  Description  |
  |--------------|---------------|
- | filters.py   | median and graph filters |
- | geo.py       | functions to calculate distance, effective velocity; to transform coordinates and to plot altitude profiles |
+ | filters.py   | median and graph-based speed limit filters |
+ | geo.py       | functions to calculate distance, effective wave velocity; to transform coordinates and to plot altitude profiles |
  | optimize.pyx | collection of cython functions to solve multelateral equations efficiently |
  | solvers.py   | GoodStationsSolver and SingleStationSolver classes |
  | stations.py  | Stations class including time correction method |
@@ -50,6 +50,7 @@ In round 1 of the competition many participants used effective wave velocity ins
 Using altitude dependence of refractive index <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> from [1], velocity as a function of altitude can be written as follows: 
 
 <p align="center"><img src="svgs/78ba6690fac5dc48d1b3aacfade2f2f3.svg?invert_in_darkmode" align=middle width=213.41924999999998pt height=33.583769999999994pt/></p>
+
 , where <img src="svgs/3e18a4a28fdee1744e5e3f79d13b9ff6.svg?invert_in_darkmode" align=middle width=7.113876000000004pt height=14.155350000000013pt/> is the speed of light, <img src="svgs/2ad9d098b937e46f9f58968551adac57.svg?invert_in_darkmode" align=middle width=9.471165000000003pt height=22.831379999999992pt/> - altitude, <img src="svgs/0b700b6ef9752b739fe4ee8dc2925d28.svg?invert_in_darkmode" align=middle width=32.12352pt height=24.65759999999998pt/> - refractive index, <img src="svgs/2e5cace905a61fe431f7b898becb0be1.svg?invert_in_darkmode" align=middle width=18.881445000000006pt height=22.46574pt/> and <img src="svgs/61e84f854bc6258d4108d08d4c4a0852.svg?invert_in_darkmode" align=middle width=13.293555000000003pt height=22.46574pt/> - some constants.
 
 Instead of integrating velocity each time, let's consider some constant (average) effective velocity: 
@@ -85,7 +86,7 @@ We have to have some already synchronized stations. Let's consider a synchronize
 
 Considering <img src="svgs/31d18a2424dd7476a46822fd19f48a1b.svg?invert_in_darkmode" align=middle width=135.345375pt height=31.780980000000003pt/> and inserting corresponding equation for station 1, we get the resulting formula:
 
-<p align="center"><img src="svgs/41cbbaf3ed472eec2eabbc98917c55f0.svg?invert_in_darkmode" align=middle width=488.12445pt height=61.57469999999999pt/></p>
+<p align="center"><img src="svgs/98b9eeef4d66a6a6de7eb6e5c4826681.svg?invert_in_darkmode" align=middle width=490.09785pt height=33.629475pt/></p>
 
 ### Clock drift approximation
 

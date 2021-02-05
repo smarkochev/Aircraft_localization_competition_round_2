@@ -12,22 +12,22 @@
 (gt) >> jupyter notebook
 ```
 
-Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `NTHREADS` variable in `optimize.pyx` file.  
+Some functions use Cython code, which needs to be compiled. Just run the `1. Synchronize good stations.ipynb` notebook first. Cython functions use 4 CPU cores by default, adjust `N_THREADS` variable in `optimize.pyx` file.  
 
 #### Data sets
 
 All data files should be in ./data folder. Only three files were used in this solution:
- - round2competition.csv
- - round2sensors.csv
- - round2training1.csv
+ - round2_competition.csv
+ - round2_sensors.csv
+ - round2_training1.csv
 
 
 # /src files description
 
  | Filename     |  Description  |
  |--------------|---------------|
- | filters.py   | median and graph filters |
- | geo.py       | functions to calculate distance, effective velocity; to transform coordinates and to plot altitude profiles |
+ | filters.py   | median and graph-based speed limit filters |
+ | geo.py       | functions to calculate distance, effective wave velocity; to transform coordinates and to plot altitude profiles |
  | optimize.pyx | collection of cython functions to solve multelateral equations efficiently |
  | solvers.py   | GoodStationsSolver and SingleStationSolver classes |
  | stations.py  | Stations class including time correction method |
@@ -50,6 +50,7 @@ In round 1 of the competition many participants used effective wave velocity ins
 Using altitude dependence of refractive index $n(h)$ from [1], velocity as a function of altitude can be written as follows: 
 
 $$v(h) = \frac{c}{n(h)} = \frac{c}{1 + A_0\cdot e^{-B\cdot h}}$$
+
 , where $c$ is the speed of light, $h$ - altitude, $n(h)$ - refractive index, $A_0$ and $B$ - some constants.
 
 Instead of integrating velocity each time, let's consider some constant (average) effective velocity: 
@@ -88,7 +89,7 @@ $$drift(t_2) = t_2^{meas} - t_2^{aircraft} - \frac{L_2}{\hat{v}}$$
 Considering $t_2^{aircraft} \triangleq t_1^{aircraft}$ and inserting corresponding equation for station 1, we get the resulting formula:
 
 \begin{equation}
-drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}$$
+drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}
 \end{equation}
 
 ### Clock drift approximation
