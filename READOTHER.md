@@ -33,39 +33,52 @@ All data files should be in ./data folder. Only three files were used in this so
  | stations.py  | Stations class including time correction method |
  | track.py     | Track and TrackCollection classes to work with tracks |
 
+# /results files description
+
+ | Filename     |  Description  |
+ |--------------|---------------|
+ | predictions_test.csv | Test track predictions created using predict_track function |
+ | stations_params_final.json | Synchronized stations parameters used in my submissions |
+ | submission_78m.csv | The best submission on the public leaderboard showing about 78m accuracy |
+
 
 # 2. Theory
 ## 2.1 Signal velocity model
 
-In round 1 of the competition many participants used effective signal velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of signal velocity. 
+In round 1 of the competition many participants used effective wave velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of wave velocity. 
 
 Using altitude dependence of refractive index $n(h)$ from [1], velocity as a function of altitude can be written as follows: 
 
 $$v(h) = \frac{c}{n(h)} = \frac{c}{1 + A_0\cdot e^{-B\cdot h}}$$
 , where $c$ is the speed of light, $h$ - altitude, $n(h)$ - refractive index, $A_0$ and $B$ - some constants.
 
-Instead of integrating velocity each time, let's consider some constant effective velocity: 
+Instead of integrating velocity each time, let's consider some constant (average) effective velocity: 
 $$\hat{v} = const = \frac{L}{\int{dt(h)}}$$
 
 $$\int{dt(h)} = \int_0^L{\frac{1+A_0\cdot e^{-B\cdot l\cdot \sin{\phi}}}{c}\cdot dl} = \int_{h_1}^{h_2}{\frac{1+A_0\cdot e^{-B\cdot h}}{c\cdot \sin{\phi}}\cdot dh} = \frac{h_2 - h_1}{c\cdot \sin{\phi}} + \frac{A_0}{c\cdot B\cdot \sin{\phi}}\cdot(e^{-B\cdot h_1} - e^{-B\cdot h_2})$$
-, where $L$ - signal path, $h_1$ and $h_2$ - initial and final altitudes of the signal path.
 
-Finally, after inserting $L = \frac{h_2 - h_1}{\sin{\phi}}$, effective signal velocity will be:
-$$\hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1$$
+, where $L$ - wave path, $h_1$ and $h_2$ - initial and final altitudes of the wave path.
 
-New signal velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
+Finally, after inserting $L = \frac{h_2 - h_1}{\sin{\phi}}$, effective wave velocity will be:
+
+\begin{equation}
+\hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1
+\end{equation}
+
+New wave velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
 [1] R. Purvinskis et al. Multiple Wavelength Free-Space Laser Communications. Proceedings of SPIE - The International Society for Optical Engineering, 2003. 
 
-## 2.2 Stations time drift
+## 2.2 Stations clock drift
 
-Stations are synchronized when there is no time drift, so measured time is equal to aircraft time + time-of-flight:
+Stations are synchronized when there is no clock drift, so measured time is equal to aircraft time + time-of-flight:
 
 $$t^{meas} = t^{aircraft} + \frac{L}{\hat{v}}$$
 
 If station measurements have a drift, then:
 
 $$t^{meas} = t^{aircraft} + \frac{L}{\hat{v}} + drift(t^{aircraft} + \frac{L}{\hat{v}})$$
+
 It's worth to notice here that drift is added at the moment of signal detection!
 
 We have to have some already synchronized stations. Let's consider a synchronized station 1 and a drifted station 2.
@@ -74,38 +87,72 @@ $$drift(t_2) = t_2^{meas} - t_2^{aircraft} - \frac{L_2}{\hat{v}}$$
 
 Considering $t_2^{aircraft} \triangleq t_1^{aircraft}$ and inserting corresponding equation for station 1, we get the resulting formula:
 
-$$drift(t_2) = t_2^{meas} - \frac{L_2}{\hat{v}} - (t_1^{meas} - \frac{L_1}{\hat{v}})$$
+\begin{equation}
+drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}$$
+\end{equation}
 
-### Time drift approximation
-Drift was approximated by a sum of a linear function and a spline:
+### Clock drift approximation
+
+Clock drift consists of linear drift and a random walk. Clock drift was approximated by a sum of a linear function and a spline:
+
 $$drift(t) = A\cdot t + B + spline(t)$$
 
 So,
+
 $$t^{meas} = t^{aircraft} + \frac{L}{\hat{v}} + A\cdot(t^{aircraft} + \frac{L}{\hat{v}}) + B + spline(t^{aircraft} + \frac{L}{\hat{v}})$$
+
 $$t^{meas} = (A+1)\cdot(t^{aircraft} + \frac{L}{\hat{v}}) + B + spline(t^{aircraft} + \frac{L}{\hat{v}})$$
 
-It would be very difficult to solve the last nonlinear equation directly. Instead, we will use the fact that spline eliminates the slow component of time drift and therefore in the first approximation we can simply ignore it:
+It would be very difficult to solve the last nonlinear equation directly. Instead, we will use the fact that spline eliminates the slow component (random walk) of clock drift and therefore in the first approximation we can simply ignore it:
 
 $$t^{aircraft} + \frac{L}{\hat{v}} = \frac{t^{meas} - B}{A+1}$$
 
 Finally, we can synchronize station measurements by applying the following trasformation to measured time values:
-$$t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1}$$
+
+\begin{equation}
+t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1}
+\end{equation}
+
+# 3. Solution steps
+
+## 3.1 `1. Synchronize good stations.ipynb`
+
+Here I computed parameters of the wave velocity model, sensors positions and clock shifts for 35 good stations out of 45 provided. A good station shouldn't have visible clock drift and should have pairs with several other good stations (we should be able to optimize its location).
+
+For 35 selected stations a subset of points (20,000 per station) was prepared to reduce computation complexity. On this subset averaged L1 loss $|L_1 - L_2 - \hat{v}\cdot(t_1^{meas} + t_1^{shift} - t_2^{meas} - t_2^{shift})|$ was minimized. $L_1$ and $L_2$ are distances from an aircraft to two stations, $t_1^{shift}$ and $t_2^{shift}$ are constant stations time shifts.
 
 
-# 3. Solution
+## 3.2 `2. Add station 150 using round2_training1 dataset.ipynb`
 
-## 3.1 Compute parameters of signal velocity model, sensors positions and time shifts for 35 good stations: `1. Synchronize good stations.ipynb`
+I decided to add station 150 separately because it has only one pair with a good station (station 14) from 35 synchronized. It's not enough to update station's location, so I didn't want to include it to the 35 good stations list.
 
-Here we select 35 best 'good' stations out of 45 marked. A good station shouldn't have visible time drift and should have pairs with several other good stations (we should be able to optimize its location).
+## 3.3 `3. Synchronize all other stations.ipynb`
 
-For 35 selected stations a subset of points (20,000 per station) was prepared to reduce computation complexity. On this subset average L1 loss $|L_1 - L_2 - \hat{v}\cdot(t_1^{meas} + t_1^{shift} - t_2^{meas} - t_2^{shift})|$ was minimized. $L_1$ and $L_2$ are distances from aircraft to stations, $t_1^{shift}$ and $t_2^{shift}$ are constant stations time shifts.
+Starting from the stations closest to 36 synchronized, I was able to synchronize more than 200 other stations. Initially I considered only candidates having at least 3 pairs with synchronized stations each of which having at least 1000 points. By the end I had to reduce these constrains in order to add more stations.
+
+This notebook contains many runs of synchronization of new stations, total computation time on my computer is about 8 hours. Many stations showing time gaps or big estimated median error were checked visually before adding to the list. So, even stations with time gaps were added (and their gaps recorded) and used later for tracks prediction.
+
+## 3.4 `4. Predict and filter tracks.ipynb`
+
+Tracks prediction is based on the algorithm I developed in the round 1 of the competition. The main idea is to use HuberRegression to fit points after solving multilateration equations. Such a method almost always showed better accuracy on the training dataset in comparison with pure spline approximation. Also I used a brilliant graph-based filter developed by @richardalligier in the round 1 to filter points after solving multilateration equations by aircraft speed limit.
+
+After this stage algorithm should produce about 70.5...71.5% coverage of test tracks with accuracy about 85m on the public leaderboard.
+
+In order to improve accuracy further, I removed points with big error and added new points with small error. Splines for latitude and longitude as functions of timeAtServer were fitted for each track. Distance between points predicted earlier and splines gave me estimation of error in points. New points may be added to fill gaps in tracks. Accuracy of new points depends on gap duration, so the best result on the public leaderboard was achieved by using gaps of 60s or less.
 
 
-## 3.2 Add station 150 using training1 dataset `2. Add station 150.ipynb`
+## 3.5 Computation time
 
-## 3.3 Synchronize all stations
+Synchronization time for good stations depends on initial values and may be between 30min and several hours. Synchronization of all stations took at least 8 hours on my machine. Prediction of test tracks required about 3 hours, while tracks filtering is pretty fast.
 
-## 3.4 Predict and filter tracks
+I'm sure there is a big potential for optimization especially for stations synchronization.
 
+# 4. External code usage
 
-# Notes
+\begin{itemize}
+\item Transformation of coordinates from WGS84 to Cartesian was taken from \href{https://competition.opensky-network.org/documentation.html}{OpenSky documentation page};
+
+\item Some useful functions (haversine_distance, numpylla2ecef) were taken from the solution of @richardalligier from round 1;
+
+\item Functions related to graph filter to aircraft speed (precompute_distance, get_gtlongest, compute_gtgraph, filter_speedlimit) were also taken from the solution of @richardalligier from round 1 of the competition.
+\end{itemize}
