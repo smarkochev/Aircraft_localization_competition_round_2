@@ -62,7 +62,7 @@ Instead of integrating velocity each time, let's consider some constant (average
 
 Finally, after inserting <img src="svgs/09167708b6619ba3b4d57545fe6e5937.svg?invert_in_darkmode" align=middle width=73.57482pt height=29.461410000000004pt/>, effective wave velocity will be:
 
-<p align="center"><img src="svgs/39f1f9918fda9b6a9888a6c3c6fe335e.svg?invert_in_darkmode" align=middle width=510.213pt height=39.53796pt/></p>
+<p align="center"><img src="svgs/c410b897132594ff840125f3992d52cc.svg?invert_in_darkmode" align=middle width=366.73395pt height=39.53796pt/></p>
 
 New wave velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
@@ -86,7 +86,7 @@ We have to have some already synchronized stations. Let's consider a synchronize
 
 Considering <img src="svgs/31d18a2424dd7476a46822fd19f48a1b.svg?invert_in_darkmode" align=middle width=135.345375pt height=31.780980000000003pt/> and inserting corresponding equation for station 1, we get the resulting formula:
 
-<p align="center"><img src="svgs/98b9eeef4d66a6a6de7eb6e5c4826681.svg?invert_in_darkmode" align=middle width=490.09785pt height=33.629475pt/></p>
+<p align="center"><img src="svgs/8ae1980b3b61530d7a288ad6cbe5fae7.svg?invert_in_darkmode" align=middle width=326.50199999999995pt height=33.629475pt/></p>
 
 ### Clock drift approximation
 
@@ -106,7 +106,7 @@ It would be very difficult to solve the last nonlinear equation directly. Instea
 
 Finally, we can synchronize station measurements by applying the following trasformation to measured time values:
 
-<p align="center"><img src="svgs/fdc44b77da205cb99eb0d79123841626.svg?invert_in_darkmode" align=middle width=540.5598pt height=41.067015pt/></p>
+<p align="center"><img src="svgs/671246a48bdb81ae2fe07c964e122a1b.svg?invert_in_darkmode" align=middle width=427.42755pt height=41.067015pt/></p>
 
 # 3. Solution steps
 
@@ -144,4 +144,9 @@ I'm sure there is a big potential for optimization especially for stations synch
 
 # 4. External code usage
 
-<p align="center"><img src="svgs/7e8c0b90e60eb7fead2b71723e7bd819.svg?invert_in_darkmode" align=middle width=1456.9450499999998pt height=102.511365pt/></p>
+
+ - Transformation of coordinates from WGS84 to Cartesian was taken from [https://competition.opensky-network.org/documentation.html];
+
+ - Some useful functions (haversine_distance, numpylla2ecef) were taken from the solution of @richardalligier from round 1;
+
+ - Functions related to graph filter to aircraft speed (precompute_distance, get_gtlongest, compute_gtgraph, filter_speedlimit) were also taken from the solution of @richardalligier from round 1 of the competition.

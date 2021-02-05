@@ -62,9 +62,7 @@ $$\int{dt(h)} = \int_0^L{\frac{1+A_0\cdot e^{-B\cdot l\cdot \sin{\phi}}}{c}\cdot
 
 Finally, after inserting $L = \frac{h_2 - h_1}{\sin{\phi}}$, effective wave velocity will be:
 
-\begin{equation}
-\hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1
-\end{equation}
+$$\hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1   (Eq. 1)$$
 
 New wave velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
@@ -88,9 +86,7 @@ $$drift(t_2) = t_2^{meas} - t_2^{aircraft} - \frac{L_2}{\hat{v}}$$
 
 Considering $t_2^{aircraft} \triangleq t_1^{aircraft}$ and inserting corresponding equation for station 1, we get the resulting formula:
 
-\begin{equation}
-drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}
-\end{equation}
+$$drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}  (Eq. 2)$$
 
 ### Clock drift approximation
 
@@ -110,9 +106,7 @@ $$t^{aircraft} + \frac{L}{\hat{v}} = \frac{t^{meas} - B}{A+1}$$
 
 Finally, we can synchronize station measurements by applying the following trasformation to measured time values:
 
-\begin{equation}
-t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1}
-\end{equation}
+$$t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1} (Eq. 3)$$
 
 # 3. Solution steps
 
@@ -150,10 +144,9 @@ I'm sure there is a big potential for optimization especially for stations synch
 
 # 4. External code usage
 
-\begin{itemize}
-\item Transformation of coordinates from WGS84 to Cartesian was taken from \href{https://competition.opensky-network.org/documentation.html}{OpenSky documentation page};
 
-\item Some useful functions (haversine_distance, numpylla2ecef) were taken from the solution of @richardalligier from round 1;
+ - Transformation of coordinates from WGS84 to Cartesian was taken from [https://competition.opensky-network.org/documentation.html];
 
-\item Functions related to graph filter to aircraft speed (precompute_distance, get_gtlongest, compute_gtgraph, filter_speedlimit) were also taken from the solution of @richardalligier from round 1 of the competition.
-\end{itemize}
+ - Some useful functions (haversine_distance, numpylla2ecef) were taken from the solution of @richardalligier from round 1;
+
+ - Functions related to graph filter to aircraft speed (precompute_distance, get_gtlongest, compute_gtgraph, filter_speedlimit) were also taken from the solution of @richardalligier from round 1 of the competition.
