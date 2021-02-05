@@ -59,7 +59,7 @@ Instead of integrating velocity each time, let's consider some constant effectiv
 , where <img src="https://rawgit.com/in	git@github.com:smarkochev/Aircraft_localization_competition_round_2/main/svgs/ddcb483302ed36a59286424aa5e0be17.svg?invert_in_darkmode" align=middle width=11.187330000000003pt height=22.46574pt/> - signal path, <img src="https://rawgit.com/in	git@github.com:smarkochev/Aircraft_localization_competition_round_2/main/svgs/5a95dbebd5e79e850a576db54f501ab8.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> and <img src="https://rawgit.com/in	git@github.com:smarkochev/Aircraft_localization_competition_round_2/main/svgs/0f7cea0b89929faf20eda59174bc247f.svg?invert_in_darkmode" align=middle width=16.023645000000005pt height=22.831379999999992pt/> - initial and final altitudes of the signal path.
 
 Finally, after inserting <img src="https://rawgit.com/in	git@github.com:smarkochev/Aircraft_localization_competition_round_2/main/svgs/09167708b6619ba3b4d57545fe6e5937.svg?invert_in_darkmode" align=middle width=73.57482pt height=29.461410000000004pt/>, effective signal velocity will be:
-<p align="center"><img src="https://rawgit.com/in	git@github.com:smarkochev/Aircraft_localization_competition_round_2/main/svgs/39f1f9918fda9b6a9888a6c3c6fe335e.svg?invert_in_darkmode" align=middle width=510.213pt height=39.53796pt/></p>
+<p align="center"><img src="svgs/39f1f9918fda9b6a9888a6c3c6fe335e.svg?invert_in_darkmode" align=middle width=510.213pt height=39.53796pt/></p>
 
 New signal velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
