@@ -1,19 +1,17 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
 
-# C extensions
-*.so
-
-# Distribution / packaging / data
-data/
+# Cython temporary
 build/
+*.o
+*.c
+
+# Data folder
+data/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# csv and zip files
-.csv
+# zip files
 .zip
 
