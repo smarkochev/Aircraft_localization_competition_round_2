@@ -43,7 +43,7 @@ All data files should be in ./data folder. Only three files were used in this so
 
 
 # 2. Theory
-## 2.1 Signal velocity model
+## 2.1 Wave velocity model
 
 In round 1 of the competition many participants used effective wave velocity instead of speed of light to estimate distance by time-of-flight. @richardalligier found its value using optimization technique. In round 2 I improved this model by introducing altitude dependence of wave velocity. 
 
