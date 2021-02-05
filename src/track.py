@@ -20,6 +20,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import HuberRegressor
 
 
+## Predict track using points after solving multilateration equations
 def check_point(full, part, t0, Teps=30, Nmin=10, ds_max=50):
     # select points from the neighbourhood
     ii = np.where(abs(part.timeAtServer.values - t0) < Teps)[0]
@@ -49,6 +50,7 @@ def check_point(full, part, t0, Teps=30, Nmin=10, ds_max=50):
     return id_max
 
 
+## class to work with a track
 class Track:
     def __init__(self, df, stations=None):
         self._aircraft = df.aircraft.values[0]
@@ -147,7 +149,6 @@ class Track:
         
         
     def correct_time(self, stations):
-        #stations = self._st
         # time correction for each stations
         for s in self._times:
             self._times[s] = stations.correct_time(s, self._times[s])
@@ -185,159 +186,17 @@ class Track:
         plt.clim(cmin, cmax)
         
         
-    def solve(self, stations, verbose=True):
-        tel = (self._telemetry.assign(times = lambda x: [np.array([stations.correct_time(w[0], [w[1]*1e-9])[0] for w in eval(meas) if w[0] in stations.inventory]) for meas in x.measurements],
-                                      stations = lambda x: [[w[0] for w in eval(meas) if w[0] in stations.inventory] for meas in x.measurements])
-                              .assign(num = lambda x: x.stations.apply(lambda y: stations.undup_stations(y)),
-                                      atime = lambda x: x.times.apply(lambda y: np.mean(y)))
-                              .assign(stations = lambda x: x.stations.apply(lambda y: np.array(y)))
-                              .loc[lambda x: x.num>=2, :]
-                              .reset_index(drop=True)
-                          )
-        
-        st_cart = []
-        st_hgt = []
-        
-        for s in stations.inventory:
-            st_cart += stations.carts(s)
-            st_hgt += [stations.locs(s)[2]]
-            
-        st_cart = np.array(st_cart)
-        st_hgt = np.array(st_hgt)
-        
-        N = tel.shape[0]
-        
-        y = tel[['latitude', 'longitude', 'baroAltitude', 'geoAltitude']].values
-        all_times = tel.times.values
-        all_stations = tel.stations.values
-        
-        lat_pred, lon_pred, err, err_dist = np.zeros(N), np.zeros(N), np.zeros(N), np.zeros(N)
-        
-        # Solve multilateration equations
-        for i in tel[tel.num >= 3].index:
-            st = all_stations[i]
-
-            x0 = np.zeros(2)
-            for s in st:
-                x0 += np.array(stations.locs(s)[:2])
-
-            x0 /= len(st)
-
-            result = fmin_l_bfgs_b(solve_point, x0, 
-                                   args=(y[i, 2],
-                                         all_times[i],
-                                         np.array([stations.i(s) for s in st], dtype=np.int32),
-                                         st_cart,
-                                         st_hgt,
-                                         stations.A0,
-                                         stations.B,
-                                         1),
-                                   factr=10,
-                                   approx_grad=1
-                                   )
-            
-            lat_pred[i] = result[0][0]
-            lon_pred[i] = result[0][1]
-            err[i] = result[1]
-            err_dist[i] = haversine_distance(result[0][0], result[0][1], y[i, 0], y[i, 1])
-            
-        tel['lat_pred'] = lat_pred
-        tel['lon_pred'] = lon_pred
-        tel['err'] = err
-        tel['err_dist'] = err_dist
-        
-        self._telemetry = tel
-        
-        # Filter by multilateration error
-        ind = np.where(tel.err.values < 2e-6)[0]
-        if len(ind) == 0:
-            return []
-
-        db = DBSCAN(eps=0.02, min_samples=5).fit(tel[['lon_pred', 'lat_pred']].values[ind])
-        ind2 = ind[np.where(db.labels_!=-1)[0]]
-        if len(ind2) == 0:
-            return []
-        
-        # Filter by graph model
-        res = filter_speedlimit(tel.lat_pred.values[ind2],
-                          tel.lon_pred.values[ind2],
-                          tel.timeAtServer.values[ind2],
-                          0, 300, verbose)
-        ind3 = ind2[np.where(res == True)[0]]
-        if len(ind3) == 0:
-            return []
-        
-        if verbose:
-            err = [haversine_distance(lat1, lon1, lat2, lon2) for lat1, lon1, lat2, lon2 in zip(tel.latitude.values[ind3],                                                                                                       tel.longitude.values[ind3],
-                                                                                                tel.lat_pred.values[ind3],
-                                                                                                tel.lon_pred.values[ind3])]
-            print('Error after graph filter=', np.mean(sorted(err)[:int(0.9*len(ind3))]))
-            
-        # Filter using Huber regression
-        full = tel.iloc[ind3[0]:ind3[-1]]
-        full['lat_pred2'] = np.zeros(full.shape[0])
-        full['lon_pred2'] = np.zeros(full.shape[0])
-
-        part = tel.iloc[ind3]
-
-        i = 0
-        while i < part.shape[0]:
-            try:  # sometimes HuberRegression doesn't converge
-                id_max = check_point(full, part, part.timeAtServer.values[i], Teps=30, Nmin=10, ds_max=35)
-            except:
-                # return unsuccess
-                id_max = -1
-
-            if id_max == -1:
-                # unsuccess -> move to the next base point in track
-                i += 1
-            else:
-                # success -> move to the next base point outside the neighborhood
-                i = np.where(part.id.values == id_max)[0][0] + 1
-
-        # Result after Huber filter
-        indx = np.where(full.lat_pred2 != 0)[0]
-        if len(indx) == 0:
-            return []
-        
-        x = (full
-             .iloc[indx]
-             .assign(err_dist2 = lambda x: [haversine_distance(lat1, lon1, lat2, lon2) for lat1, lon1, lat2, lon2 in zip(x.latitude, x.longitude, x.lat_pred2, x.lon_pred2)])
-            )
-        
-        if verbose:
-            print('Error after Huber filter=', np.mean(np.sort(x.err_dist2.values)[:int(0.9*len(indx))]))
-
-        # Filter graph again
-        res1 = filter_speedlimit(x.lat_pred2.values,
-                                 x.lon_pred2.values,
-                                 x.timeAtServer.values,
-                                 0, 300, verbose)
-        
-        j = np.where(res1==True)[0]
-        if len(j) == 0:
-            return []
-
-        if verbose:
-            print(f'Total points fitted = {len(j)} out of {tel.shape[0]}')
-            print('Final error=', np.mean(np.sort(x.err_dist2.values[j])[:int(0.9*len(j))]))
-
-            plt.scatter(x.lon_pred2.values[j], x.lat_pred2.values[j], c=x.err_dist2.values[j])
-            plt.colorbar()
-            plt.grid()
-            
-        return x.err_dist2.values[j].tolist()
-        
-        
-        
+## class to work with a collection of tracks        
 class TrackCollection():
     def __init__(self, df, stations=None):
         self._tracks = []
         
         for aircraft in tqdm(df.aircraft.unique()):
             tr = Track(df[df.aircraft==aircraft], stations)
+            ## correct time if Stations object provided 
             if stations is not None:
                 tr.correct_time(stations)
+                
             self._tracks.append(tr)
     
     
@@ -358,6 +217,7 @@ class TrackCollection():
         return self._tracks[i]
     
     
+    # aggregate telemetry and/or time across tracks
     def aggregate(self, comb, return_telemetry=False, return_time=False):
         track_stat = {}
 

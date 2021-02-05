@@ -25,6 +25,7 @@ import json
 import os
 
 
+### Solver class to carry out optimization of good stations
 class GoodStationsSolver():
     def __init__(self):
         self.result = np.array([])
@@ -39,6 +40,7 @@ class GoodStationsSolver():
         return str(self.result)
 
     
+    ## Prepare a subset of data for optimization
     def prepare_data(self, tracks, stations, threshold=1500*1e-9, N=10000):
         self.__prepare_telemetry_for_combinations(tracks, stations, [x for x in itertools.combinations(stations.inventory, r=2)])
         self.__filter_by_delta_time(threshold)
@@ -46,11 +48,15 @@ class GoodStationsSolver():
         self.__prepare_points(stations, N)
         
         
+    ## Optimize:
+    # 1) A0, B, shifts and stations locations (optimize_location_flag = True)
+    # 2) or stations shifts only (optimize_location_flag = False)
     def optimize(self, stations, A0, B, shifts, optimize_locations_flag=False):
         # Save setup
         self.optimize_locations = optimize_locations_flag
         
-        if not optimize_locations_flag:  ## A0, B and time shifts only
+        if not optimize_locations_flag:  ## time shifts only
+            # stations locations in cartesian coordinates + heights
             st_loc = np.array([])
             st_hgt = np.array([])
             for s in stations.inventory:
@@ -129,7 +135,8 @@ class GoodStationsSolver():
 
         _ = plt.hist([y for y in output if y < hist_lim], bins=hist_bins)
                            
-                
+    
+    ## Prepare telemetry for given pairs of stations (combinations)
     def __prepare_telemetry_for_combinations(self, tracks, stations, combinations):
         st_list = {}  # station: combinations
         mp = {}  # telemetry for combinations
@@ -196,6 +203,8 @@ class GoodStationsSolver():
         self.st_list = st_list
         self.mp = mp
                     
+            
+    ## Filter telemetry by applying a threshold around median value
     def __filter_by_delta_time(self, threshold=1500):
         # Filtering for good stations
         for key in tqdm(self.mp):
@@ -212,7 +221,8 @@ class GoodStationsSolver():
 
             self.mp[key]['cartesian'] = [self.mp[key]['cartesian'][i] for i in ind_cart]
 
-            
+    
+    ## Prepare statistics on filtered telemetry
     def __calculate_station_statistics(self):
         # Calculate statistics 
         st_N = defaultdict(int)
@@ -223,6 +233,8 @@ class GoodStationsSolver():
                 
         self.st_N = st_N
 
+        
+    ## Prepare a subset of telemetry points of a given size 
     def __prepare_points(self, stations, N=10000):
         # Prepare output
         cartesian = []
@@ -264,14 +276,16 @@ class GoodStationsSolver():
                        'st1':np.array(st1),
                        'st2':np.array(st2)}
     
-    
-    
+
+
+### Solver class to carry out optimization of not so good stations
 class SingleStationSolver():
     
     def __init__(self):
         pass
     
     
+    ## Find new stations and their pairs with already synchronized ones
     def find_new_stations(self, tracks, stations, bad_stations=[], N=1000):
         new_stations = {}
 
@@ -301,6 +315,7 @@ class SingleStationSolver():
         return new_stations
         
         
+    ## Prepare a subset of telemetry points for given pairs of stations of a given size
     def prepare_data(self, tracks, stations, single_station, N=10000):
         __cartesian = []
         __geoalt = []
@@ -339,24 +354,13 @@ class SingleStationSolver():
 
                 __geoalt += tel.geoAltitude.values.tolist()
 
-                #t = tr.time(comb)
-
                 if comb[0] == single_station:
-                    #st1, st2 = comb
                     __st2 += [stations.i(comb[1])] * t.shape[0]
                 else:
-                    #st2, st1 = comb
                     __st2 += [stations.i(comb[0])] * t.shape[0]
-                    
-                #st1_str, st2_str = str(st1), str(st2)
                     
                 __t1 += t[str(st1)].values.tolist()
                 __t2 += time2[np.where(~np.isnan(time2))[0]].tolist()
-                #if stations.time_correction_available(st2):
-                #__t2 += stations.correct_time(st2, t[st2_str].values)
-                #else:
-                #    __t2 += t[st2_str].values.tolist()
-                
             
                 N_points += t.shape[0]
                 
@@ -385,6 +389,7 @@ class SingleStationSolver():
         self.points = points
         
         
+    ## Return aircraft time given station measured values
     def prepare_aircraft_time(self, all_points=False):
         if all_points is True:
             arr = self.all_points
@@ -417,6 +422,7 @@ class SingleStationSolver():
         return t_0
     
     
+    ## Return station time given estimated aircraft time values
     def prepare_station_time(self, t2_0, all_points=False):
         if all_points is True:
             arr = self.all_points
@@ -440,37 +446,49 @@ class SingleStationSolver():
         return t1_1
 
     
-    
+    ## Optimization method:
+    # - optimize station location and linear clock drift using a subset of points
+    # - select the best spline approximation of clock random walk on all available points
     def optimize(self):
+        # aircraft time according to eq.2 from Theory
         t2_0 = np.array(self.prepare_aircraft_time(all_points=False))
+        # station time according to eq.2 from Theory
         t1_1 = np.array(self.prepare_station_time(t2_0, all_points=False))
         
+        # eliminate linear drift using eq.2 from Theory
         lr = RANSACRegressor().fit(t1_1.reshape(-1, 1), self.points['t1'] - t1_1)
+        # use predicted values below
         shift = lr.predict(t1_1.reshape(-1, 1))
         
         N = t1_1.shape[0]
         A0 = self.stations.A0
         B = self.stations.B
+        
         # Define a parameter for median filter
         med_par = int(N * 30. / 3600.)
         med_par = med_par if (med_par % 2 != 0) else (med_par + 1)
         
+        # optimization function
         def func(x, cart_points, heights, t1, t2_0, shift, A0, B, med_par, return_arrays=False):
             N = t2_0.shape[0]
             t1_1 = np.zeros(N)
             cart = P3(*x).to_cartesian()
             for i in range(N):
+                # distance from aircraft location to station
                 d1 = np.sqrt(pow(cart_points[3*i] - cart[0], 2) + \
                              pow(cart_points[3*i+1] - cart[1], 2) + \
                              pow(cart_points[3*i+2] - cart[2], 2))
+                # aircraft time
                 t1_1[i] = t2_0[i] + d1 / eff_velocity(x[2], heights[i], A0, B)
 
             ind = np.argsort(t1_1)
+            # apply median filter to random walk values
             med = median_filter(t1[ind] - t1_1[ind] - shift[ind], med_par)
             
             if return_arrays:
                 return t1_1, med, ind
             else:
+                # minimize residual error using linear drift predicted values and median values for random wallk
                 return 1e9*np.sum(np.fabs(t1[ind] - t1_1[ind] - shift[ind] - med)) / N
         
         # optimization
@@ -485,6 +503,7 @@ class SingleStationSolver():
                                     maxfun=300,
                                     approx_grad=1)
         
+        ## If optimization error too big -> bad station
         if self.result[1] > 1e7:
             self.delta_dist = np.nan
             self.med_error = np.nan
@@ -494,10 +513,9 @@ class SingleStationSolver():
             self.lr = lr
             return
         
-        # if too far from initial location
+        # if new location is too far from the initial value
         self.delta_dist = dist3d(P3(*self.result[0]), self.stations.p3s(self.single_station))
-        if self.delta_dist > 100:
-            #print('Run one more time')
+        if self.delta_dist > 100:  #[m]
             # rerun optimization one more time
             t1_1, _, _ = func(self.result[0],
                               self.points['cartesian'],
@@ -519,53 +537,43 @@ class SingleStationSolver():
                                               A0, B, med_par),
                                         maxfun=300,
                                         approx_grad=1)
-            #print(self.result)
         
+        # get station time values etc
         self.t1_1, self.med, self.ind = func(self.result[0],
                                               self.points['cartesian'],
                                               self.points['geoalt'],
                                               self.points['t1'],
                                               t2_0, shift,
                                               A0, B, med_par, return_arrays=True)
+        
         self.t1_1 = self.t1_1[self.ind]
+        # deduplicate values
         self.t1_1, ind_dup = np.unique(self.t1_1, return_index=True)
         self.ind = self.ind[ind_dup]
         self.med = self.med[ind_dup]
         
-        
+        # max time gap
         self.max_dt_gap = np.max(np.diff(self.t1_1))
-        
-        
+        # save linear regression
         self.lr = lr
-        
+        # delta location
         self.delta_dist = dist3d(P3(*self.result[0]), self.stations.p3s(self.single_station))
         
         # update station's location
         self.stations.update_location(self.single_station, self.result[0])
         
-        # fit the best spline
+        # fit the best spline using all_points available
         t2_0 = np.array(self.prepare_aircraft_time(all_points=True))
         t1_1 = np.array(self.prepare_station_time(t2_0, all_points=True))
         
-        #t1_1, med, ind = func(self.result[0],
-        #                      self.all_points['cartesian'],
-        #                      self.all_points['geoalt'],
-        #                      self.all_points['t1'],
-        #                      t2_0, lr.predict(t1_1.reshape(-1, 1)),
-        #                      A0, B, med_par, return_arrays=True)
-            
-        
         min_error = np.inf
-        
-        #t1_1 = t1_1[ind]
-        #t1_1, ind_dup = np.unique(t1_1, return_index=True)
-        #ind = ind[ind_dup]
         
         for v in np.arange(2, 21, 0.5):
             spl = splrep(self.t1_1, self.med, s=v*1e-12, k=3)
             if any(np.isnan(spl[1])):
                 continue
             else:
+                # estimate median error in meters
                 err = 3e8*np.median(np.fabs(self.all_points['t1'] - t1_1 - lr.predict(t1_1.reshape(-1, 1)) - splev(t1_1, spl)))
                 if err < min_error:
                     min_error = err
@@ -589,13 +597,11 @@ class SingleStationSolver():
         f = plt.figure()
         
         ax1 = f.add_subplot(311)
-        #ax1.plot(self.t1_0, 1e9*(self.t2_0 - self.t1_0 - self.lr.predict(self.t1_0.reshape(-1, 1))), '.')
         ax1.plot(self.t1_1, 1e9*(self.points['t1'][self.ind] - self.t1_1 - self.lr.predict(self.t1_1.reshape(-1, 1))), '.')
         ax1.set_ylim(ylim1)
         ax1.grid()
 
         ax2 = f.add_subplot(312)
-        #ax2.plot(self.t1_1, 1e9*(self.t2_0 - self.t1_1 - self.lr.predict(self.t1_1.reshape(-1, 1)) - splev(self.t1_1, self.spl)), '.')
         ax2.plot(self.t1_1, 1e9*(self.points['t1'][self.ind] - self.t1_1 - self.lr.predict(self.t1_1.reshape(-1, 1)) - splev(self.t1_1, self.spl)), '.')
         ax2.set_ylim(ylim2)
         ax2.grid()
@@ -608,15 +614,17 @@ class SingleStationSolver():
         
         
     def save(self, filename = 'stations_params.json'):
+        # if there is no file -> create a new one
         if filename not in os.listdir():
             with open(filename, 'w') as f:
                 json.dump({}, f)
 
-        # Opening JSON file
+        # Load stations parameters
         with open(filename, 'r') as f:  
             st_params = json.load(f)
 
         
+        # prepare parameters for a new stations
         st_params[self.single_station] = {'location':self.result[0].tolist(),
                                           'lr':[self.lr.estimator_.coef_[0], self.lr.estimator_.intercept_],
                                           'spl_knots':self.spl[0].tolist(),
@@ -630,6 +638,7 @@ class SingleStationSolver():
         if self.max_dt_gap > 25:
             ind = (np.concatenate([np.array([i, i+1]) for i in np.where(np.diff(self.t1_1) > 25)[0]])).tolist()
             
+            # indent to add from both sides of a time gap
             indent = 1  # [s]
             gaps = []
             for i in range(0, len(ind), 2):
@@ -646,6 +655,7 @@ class SingleStationSolver():
             curr_gap = copy.copy(gaps[0])
             N, i = len(gaps), 1
             while i < N:
+                # in case of overlaping gaps
                 if gaps[i][0] - curr_gap[1] < 50:
                     curr_gap[1] = gaps[i][1]
                 else:
@@ -663,3 +673,4 @@ class SingleStationSolver():
         # Write to json file
         with open(filename, 'w') as f:
             json.dump(st_params, f)
+            

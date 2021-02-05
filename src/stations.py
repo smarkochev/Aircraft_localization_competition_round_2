@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from scipy.interpolate import splev
 
 
+## class to work with stations and appling time correction
 class Stations:
     
     def __init__(self, stations_list, sensors_path='data/round2_sensors.csv'):
@@ -33,7 +34,6 @@ class Stations:
         self.st_loc = {}  # station location
         self.st_p3 = {}  # stations location in cartesian coordinates
         
-        self.time_corr = {}  # functions for time correction
         self.st_params = None
         
         for i, s in enumerate(self._inventory):
@@ -129,7 +129,7 @@ class Stations:
         
         
     @__check_station
-    def carts(self, station):
+    def carts(self, station):  # cartesian coordinates for a station
         return list(self.st_p3[station].to_cartesian())
     
     
@@ -139,7 +139,7 @@ class Stations:
         
     
     @__check_station
-    def distance_to(self, station, location):
+    def distance_to(self, station, location):  # distance to a station
         if not isinstance(location, P3):
             location = P3(*location)
             
@@ -147,7 +147,7 @@ class Stations:
     
     
     @__check_station
-    def time_to(self, station, location, ns=False):
+    def time_to(self, station, location, ns=False):  # time-of-flight to a station
         if not isinstance(location, P3):
             height_1 = location[2]
         else:
@@ -171,39 +171,25 @@ class Stations:
             self.st_p3[station] = location
     
     
-    #@__check_station
-    #def set_time_correction(self, station, func=None, shift=None):
-    #    if not func and not shift:
-    #        raise Exception('Either a function or a shift is required!')
-            
-    #    if shift:
-    #        self.time_corr[station] = lambda t: (t + shift).tolist()
-    #    else:
-    #        self.time_corr[station] = lambda t: func(t).tolist()
-        
-    
-    #@__check_station
-    #def time_correction_available(self, station):
-    #    return station in self.time_corr
-    
-    
     @__check_station
-    def correct_time(self, station, time):
+    def correct_time(self, station, time):  # correct time
         if type(time) != np.ndarray:
             time = np.array(time)
             
         if self.st_params is not None:
             s = str(station)
             if s in self.st_params:
+                # apply shift for good stations
                 if 'shift' in self.st_params[s]:
                     return time + self.st_params[s]['shift']
-                else:
+                else:  # apply eq.3 from Theory for all the other stations
                     a = self.st_params[s]['lr'][0]
                     b = self.st_params[s]['lr'][1]
                     spl = (np.array(self.st_params[s]['spl_knots']), np.array(self.st_params[s]['spl_coefs']), 3)
 
                     output = (time - b - splev((time - b)/(1 + a), spl)) / (1 + a)
                     
+                    # if there gaps -> fill with nan
                     if 'gaps' in self.st_params[s]:
                         ind_nan = np.concatenate([np.where((output>=lb)&(output<=rb))[0] for lb, rb in self.st_params[s]['gaps']])
                         output[ind_nan] = np.nan
@@ -213,17 +199,7 @@ class Stations:
                 return time
             
         raise Exception('No st_params!')
-        #if station not in self.time_corr:
-        #    return time
-            
-        #if not isinstance(time, Iterable):
-        #    raise Exception('Time should be iterable')
-            
-        #if type(time) == np.ndarray:
-        #    return self.time_corr[station](time)
-        #else:
-        #    return self.time_corr[station](np.array(time))
-    
+        
     
     ## Plot all stations
     def plot(self, ax=None):
