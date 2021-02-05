@@ -62,7 +62,7 @@ $$\int{dt(h)} = \int_0^L{\frac{1+A_0\cdot e^{-B\cdot l\cdot \sin{\phi}}}{c}\cdot
 
 Finally, after inserting $L = \frac{h_2 - h_1}{\sin{\phi}}$, effective wave velocity will be:
 
-$$\hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1   (Eq. 1)$$
+$$(Eq. 1): \hat{v} = \frac{c}{1+\frac{A_0}{B\cdot (h_2 - h_1)}(e^{-B\cdot h_1}-e^{-B\cdot h_2})}, h_2 > h_1$$
 
 New wave velocity model shows 0.1m less average residual error in solving multilateral equations for 35 good stations (see `1. Synchronize good stations.ipynb` notebook).
 
@@ -86,7 +86,7 @@ $$drift(t_2) = t_2^{meas} - t_2^{aircraft} - \frac{L_2}{\hat{v}}$$
 
 Considering $t_2^{aircraft} \triangleq t_1^{aircraft}$ and inserting corresponding equation for station 1, we get the resulting formula:
 
-$$drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}  (Eq. 2)$$
+$$(Eq. 2): drift(t_2) = t_2^{meas} - (t_1^{meas} - \frac{L_1}{\hat{v}}) - \frac{L_2}{\hat{v}}$$
 
 ### Clock drift approximation
 
@@ -106,7 +106,7 @@ $$t^{aircraft} + \frac{L}{\hat{v}} = \frac{t^{meas} - B}{A+1}$$
 
 Finally, we can synchronize station measurements by applying the following trasformation to measured time values:
 
-$$t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1} (Eq. 3)$$
+$$(Eq. 3): t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas} - B - spline(\frac{t^{meas} - B}{A+1})}{A+1}$$
 
 # 3. Solution steps
 
