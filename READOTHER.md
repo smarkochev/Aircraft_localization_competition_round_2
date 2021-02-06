@@ -110,24 +110,24 @@ $$(Eq. 3): t^{aircraft} + \frac{L}{\hat{v}} \triangleq t^{sync} = \frac{t^{meas}
 
 # 3. Solution steps
 
-## 3.1 `1. Synchronize good stations.ipynb`
+## `1. Synchronize good stations.ipynb`
 
 Here I computed parameters of the wave velocity model, sensors positions and clock shifts for 35 good stations out of 45 provided. A good station shouldn't have visible clock drift and should have pairs with several other good stations (we should be able to optimize its location).
 
 For 35 selected stations a subset of points (20,000 per station) was prepared to reduce computation complexity. On this subset averaged L1 loss $|L_1 - L_2 - \hat{v}\cdot(t_1^{meas} + t_1^{shift} - t_2^{meas} - t_2^{shift})|$ was minimized. $L_1$ and $L_2$ are distances from an aircraft to two stations, $t_1^{shift}$ and $t_2^{shift}$ are constant stations time shifts.
 
 
-## 3.2 `2. Add station 150 using round2_training1 dataset.ipynb`
+## `2. Add station 150 using round2_training1 dataset.ipynb`
 
 I decided to add station 150 separately because it has only one pair with a good station (station 14) from 35 synchronized. It's not enough to update station's location, so I didn't want to include it to the 35 good stations list.
 
-## 3.3 `3. Synchronize all other stations.ipynb`
+## `3. Synchronize all other stations.ipynb`
 
 Starting from the stations closest to 36 synchronized, I was able to synchronize more than 200 other stations. Initially I considered only candidates having at least 3 pairs with synchronized stations each of which having at least 1000 points. By the end I had to reduce these constrains in order to add more stations.
 
 This notebook contains many runs of synchronization of new stations, total computation time on my computer is about 8 hours. Many stations showing time gaps or big estimated median error were checked visually before adding to the list. So, even stations with time gaps were added (and their gaps recorded) and used later for tracks prediction.
 
-## 3.4 `4. Predict and filter tracks.ipynb`
+## `4. Predict and filter tracks.ipynb`
 
 Tracks prediction is based on the algorithm I developed in the round 1 of the competition. The main idea is to use HuberRegression to fit points after solving multilateration equations. Such a method almost always showed better accuracy on the training dataset in comparison with pure spline approximation. Also I used a brilliant graph-based filter developed by @richardalligier in the round 1 to filter points after solving multilateration equations by aircraft speed limit.
 
@@ -136,7 +136,7 @@ After this stage algorithm should produce about 70.5...71.5% coverage of test tr
 In order to improve accuracy further, I removed points with big error and added new points with small error. Splines for latitude and longitude as functions of timeAtServer were fitted for each track. Distance between points predicted earlier and splines gave me estimation of error in points. New points may be added to fill gaps in tracks. Accuracy of new points depends on gap duration, so the best result on the public leaderboard was achieved by using gaps of 60s or less.
 
 
-## 3.5 Computation time
+## Computation time
 
 Synchronization time for good stations depends on initial values and may be between 30min and several hours. Synchronization of all stations took at least 8 hours on my machine. Prediction of test tracks required about 3 hours, while tracks filtering is pretty fast.
 
